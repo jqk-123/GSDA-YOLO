@@ -10,7 +10,7 @@ def normal_init(module, mean=0, std=1, bias=0):
         nn.init.constant_(module.bias, bias)
 
 
-class DySample_LP(nn.Module):
+class DySample(nn.Module):
     def __init__(self, in_channels, scale=2, groups=4):
         super().__init__()
         self.scale = scale
@@ -39,31 +39,25 @@ class DySample_LP(nn.Module):
         return self.sample(x, offset)
 
 '''
-移除 init_pos ：不再预先计算和存储初始位置偏移
-，改为在 sample 方法中动态计算坐标。
-动态计算坐标 ：在 sample 方法中，根据输入特征图的尺
-寸（H, W）动态生成初始坐标 coords_h 和 coords_w，这样可以支持不同尺度的输入特征图。
-保持坐标计算逻辑 ：将初始坐标与偏移量结合后进行归一化处
-理，确保坐标在合理范围内，然后进行像素重排和网格采样。
-'''
-'''
-1 文字阐述（逻辑链）
-固定网格（保留 _init_pos）把亚像素采样点锁死在规则格点上 → 只能产生微小局部形变；
-遥感场景中飞机、舰船、油罐往往存在大角度旋转、透视畸变 → 规则格点与目标轮廓错位；
-删除 _init_pos 后，网络直接把像素中心当“锚点”，
-可以自由地把采样点拉到任意位置 → 轮廓贴合度↑、小目标召回↑；
-通过可视化采样点坐标（红色散点）可直观看到：
-• 保留时 → 网格呈棋盘格；
-• 删除后 → 散点沿目标长轴/边缘分布。
+Remove init_pos: No longer pre-calculate and store the initial position offset
+
+Change to dynamically calculate the coordinates in the sample method.
+
+Dynamic calculation of coordinates: In the sample method, the initial coordinates coords_h 
+and coords_w are dynamically generated based on the size (H, W) of the input feature map, which can support input feature maps of different scales.
+
+Maintain the coordinate calculation logic: After combining the initial coordinates with the offset,
+perform normalization processing to ensure that the coordinates are within a reasonable range, and then carry out pixel rearrangement and grid sampling.
 '''
 
 '''
-1. 动态偏移量的优势
-原版的 init_pos 提供了一个固定的偏移量矩阵，这在某些情况下可能限制了模型对不同特征模式的适应能力。
-改进版的 offset 去掉了固定的初始化偏移量，直接使用卷积层的输出作为偏移量。
-这种动态偏移量可以根据输入特征图的不同进行自适应调整，从而更好地捕捉遥感图像中目标的多样性和复杂性。
-2. 遥感图像的特点
-遥感图像通常具有高分辨率和丰富的细节，
-目标物体可能出现在不同的位置、尺度和方向上。
-动态偏移量能够帮助模型更灵活地调整采样位置，从而更准确地检测和定位目标。
+1. The advantages of dynamic offset
+The original init_pos provides a fixed offset matrix, which may limit the model's adaptability to different feature patterns in some cases.
+The improved offset eliminates the fixed initialization offset and directly uses the output of the convolutional layer as the offset.
+This dynamic offset can be adaptively adjusted according to different input feature maps, thereby better capturing the diversity and complexity of targets in remote sensing images.
+2. Characteristics of remote sensing Images
+Remote sensing images usually have high resolution and rich details.
+The target object may appear at different positions, scales and directions.
+Dynamic offsets can help the model adjust the sampling position more flexibly, thereby detecting and locating the target more accurately.
+
 '''
