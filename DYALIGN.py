@@ -10,7 +10,7 @@ def normal_init(module, mean=0, std=1, bias=0):
         nn.init.constant_(module.bias, bias)
 
 
-class DySample(nn.Module):
+class DYALIGN(nn.Module):
     def __init__(self, in_channels, scale=2, groups=4):
         super().__init__()
         self.scale = scale
@@ -61,3 +61,4 @@ The target object may appear at different positions, scales and directions.
 Dynamic offsets can help the model adjust the sampling position more flexibly, thereby detecting and locating the target more accurately.
 
 '''
+
